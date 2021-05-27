@@ -58,7 +58,7 @@ from lms.djangoapps.courseware.testutils import RenderXBlockTestMixin
 from lms.djangoapps.courseware.toggles import (
     COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW,
     COURSEWARE_OPTIMIZED_RENDER_XBLOCK,
-    REDIRECT_TO_COURSEWARE_MICROFRONTEND,
+    USE_LEGACY_FRONTEND,
     courseware_mfe_is_advertised,
 )
 from lms.djangoapps.courseware.user_state_client import DjangoXBlockUserStateClient
@@ -115,11 +115,12 @@ FEATURES_WITH_DISABLE_HONOR_CERTIFICATE = settings.FEATURES.copy()
 FEATURES_WITH_DISABLE_HONOR_CERTIFICATE['DISABLE_HONOR_CERTIFICATES'] = True
 
 
-def _set_mfe_flag(active: bool):
+def _set_mfe_flag(mfe_enabled: bool):
     """
     A decorator/contextmanager to force the base courseware MFE flag on or off.
+    @@TODO
     """
-    return override_waffle_flag(REDIRECT_TO_COURSEWARE_MICROFRONTEND, active=active)
+    return override_waffle_flag(USE_LEGACY_FRONTEND, active=(not mfe_enabled))
 
 
 def _set_preview_mfe_flag(active: bool):
@@ -3353,7 +3354,7 @@ class TestShowCoursewareMFE(TestCase):
     * user is member of the course team
     * whether the course_key is an old Mongo style of key
     * the COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW CourseWaffleFlag
-    * the REDIRECT_TO_COURSEWARE_MICROFRONTEND ExperimentWaffleFlag
+    * the USE_LEGACY_FRONTEND opt-out CourseWaffleFlag
 
     Giving us theoretically 2^5 = 32 states. >_<
     """
@@ -3367,7 +3368,7 @@ class TestShowCoursewareMFE(TestCase):
             [True, False],  # is_global_staff
             [True, False],  # is_course_staff
             [True, False],  # preview_active (COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW)
-            [True, False],  # redirect_active (REDIRECT_TO_COURSEWARE_MICROFRONTEND)
+            [True, False],  # redirect_active (not USE_LEGACY_FRONTEND)
         )
         for is_global_staff, is_course_staff, preview_active, redirect_active in old_mongo_combos:
             with _set_preview_mfe_flag(preview_active):
