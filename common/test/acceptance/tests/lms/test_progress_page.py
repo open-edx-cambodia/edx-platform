@@ -6,6 +6,9 @@ progress page.
 
 from contextlib import contextmanager
 
+from edx_toggles.toggles.testutils import override_waffle_flag
+
+from lms.djangoapps.courseware.toggles import COURSEWARE_USE_LEGACY_FRONTEND
 
 from ...fixtures.course import CourseFixture, XBlockFixtureDesc
 from ...pages.common.logout import LogoutPage
@@ -20,6 +23,7 @@ from ..helpers import (
 )
 
 
+@override_waffle_flag(COURSEWARE_USE_LEGACY_FRONTEND, active=True)
 class ProgressPageBaseTest(UniqueCourseTest):
     """
     Provides utility methods for tests retrieving
