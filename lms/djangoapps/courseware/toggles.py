@@ -20,7 +20,7 @@ WAFFLE_FLAG_NAMESPACE = LegacyWaffleFlagNamespace(name='courseware')
 # .. toggle_creation_date: 2020-01-29
 # .. toggle_target_removal_date: 2021-10-09
 # .. toggle_tickets: DEPR-109
-USE_LEGACY_FRONTEND = CourseWaffleFlag(
+COURSEWARE_USE_LEGACY_FRONTEND = CourseWaffleFlag(
     WAFFLE_FLAG_NAMESPACE, 'use_legacy_frontend', __name__
 )
 
@@ -134,7 +134,7 @@ def courseware_mfe_is_active(course_key: CourseKey) -> bool:
         return False
     # NO: MFE courseware can be disabled for users/courses/globally via this
     #     Waffle flag.
-    if USE_LEGACY_FRONTEND.is_enabled(course_key):
+    if COURSEWARE_USE_LEGACY_FRONTEND.is_enabled(course_key):
         return False
     # OTHERWISE: MFE courseware experience is active by default.
     return True

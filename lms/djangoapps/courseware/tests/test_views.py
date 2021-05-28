@@ -58,7 +58,7 @@ from lms.djangoapps.courseware.testutils import RenderXBlockTestMixin
 from lms.djangoapps.courseware.toggles import (
     COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW,
     COURSEWARE_OPTIMIZED_RENDER_XBLOCK,
-    USE_LEGACY_FRONTEND,
+    COURSEWARE_USE_LEGACY_FRONTEND,
     courseware_mfe_is_advertised,
 )
 from lms.djangoapps.courseware.user_state_client import DjangoXBlockUserStateClient
@@ -120,7 +120,7 @@ def _set_mfe_flag(mfe_enabled: bool):
     A decorator/contextmanager to force the base courseware MFE flag on or off.
     @@TODO
     """
-    return override_waffle_flag(USE_LEGACY_FRONTEND, active=(not mfe_enabled))
+    return override_waffle_flag(COURSEWARE_USE_LEGACY_FRONTEND, active=(not mfe_enabled))
 
 
 def _set_preview_mfe_flag(active: bool):
@@ -360,6 +360,7 @@ class TestJumpTo(ModuleStoreTestCase):
 
 
 @ddt.ddt
+@_set_mfe_flag(False)
 class IndexQueryTestCase(ModuleStoreTestCase):
     """
     Tests for query count.
@@ -473,6 +474,7 @@ class BaseViewsTestCase(ModuleStoreTestCase):  # lint-amnesty, pylint: disable=m
 
 
 @ddt.ddt
+@_set_mfe_flag(False)
 class ViewsTestCase(BaseViewsTestCase):
     """
     Tests for views.py methods.
@@ -2388,6 +2390,7 @@ class ViewCheckerBlock(XBlock):
 
 
 @ddt.ddt
+@_set_mfe_flag(False)
 class TestIndexView(ModuleStoreTestCase):
     """
     Tests of the courseware.views.index view.
@@ -2621,6 +2624,7 @@ class TestIndexView(ModuleStoreTestCase):
 
 
 @ddt.ddt
+@_set_mfe_flag(False)
 class TestIndexViewCompleteOnView(ModuleStoreTestCase, CompletionWaffleTestMixin):
     """
     Tests CompleteOnView is set up correctly in CoursewareIndex.
@@ -2821,6 +2825,7 @@ class TestIndexViewWithVerticalPositions(ModuleStoreTestCase):
         self._assert_correct_position(resp, expected_position)
 
 
+@_set_mfe_flag(False)
 class TestIndexViewWithGating(ModuleStoreTestCase, MilestonesTestCaseMixin):
     """
     Test the index view for a course with gated content
@@ -2872,6 +2877,7 @@ class TestIndexViewWithGating(ModuleStoreTestCase, MilestonesTestCaseMixin):
         self.assertContains(response, "Content Locked")
 
 
+@_set_mfe_flag(False)
 class TestIndexViewWithCourseDurationLimits(ModuleStoreTestCase):
     """
     Test the index view for a course with course duration limits enabled.
@@ -3354,7 +3360,7 @@ class TestShowCoursewareMFE(TestCase):
     * user is member of the course team
     * whether the course_key is an old Mongo style of key
     * the COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW CourseWaffleFlag
-    * the USE_LEGACY_FRONTEND opt-out CourseWaffleFlag
+    * the COURSEWARE_USE_LEGACY_FRONTEND opt-out CourseWaffleFlag
 
     Giving us theoretically 2^5 = 32 states. >_<
     """
@@ -3368,7 +3374,7 @@ class TestShowCoursewareMFE(TestCase):
             [True, False],  # is_global_staff
             [True, False],  # is_course_staff
             [True, False],  # preview_active (COURSEWARE_MICROFRONTEND_COURSE_TEAM_PREVIEW)
-            [True, False],  # redirect_active (not USE_LEGACY_FRONTEND)
+            [True, False],  # redirect_active (not COURSEWARE_USE_LEGACY_FRONTEND)
         )
         for is_global_staff, is_course_staff, preview_active, redirect_active in old_mongo_combos:
             with _set_preview_mfe_flag(preview_active):
@@ -3474,8 +3480,7 @@ class MFERedirectTests(BaseViewsTestCase):  # lint-amnesty, pylint: disable=miss
         # learners will be redirected when the waffle flag is set
         lms_url, mfe_url = self._get_urls()
 
-        with _set_mfe_flag(True):
-            assert self.client.get(lms_url).url == mfe_url
+        assert self.client.get(lms_url).url == mfe_url
 
     def test_staff_no_redirect(self):
         lms_url, mfe_url = self._get_urls()  # lint-amnesty, pylint: disable=unused-variable
@@ -3485,16 +3490,16 @@ class MFERedirectTests(BaseViewsTestCase):  # lint-amnesty, pylint: disable=miss
         CourseStaffRole(self.course_key).add_users(course_staff)
         self.client.login(username=course_staff.username, password='test')
 
-        assert self.client.get(lms_url).status_code == 200
-        with _set_mfe_flag(True):
-            assert self.client.get(lms_url).status_code == 302
+        with _set_mfe_flag(False):
+            assert self.client.get(lms_url).status_code == 200
+        assert self.client.get(lms_url).status_code == 302
 
         # global staff will never be redirected
         self._create_global_staff_user()
 
-        assert self.client.get(lms_url).status_code == 200
-        with _set_mfe_flag(True):
+        with _set_mfe_flag(False):
             assert self.client.get(lms_url).status_code == 200
+        assert self.client.get(lms_url).status_code == 200
 
     def test_exam_no_redirect(self):
         # exams will not redirect to the mfe, for the time being
@@ -3503,8 +3508,7 @@ class MFERedirectTests(BaseViewsTestCase):  # lint-amnesty, pylint: disable=miss
 
         lms_url, mfe_url = self._get_urls()  # lint-amnesty, pylint: disable=unused-variable
 
-        with _set_mfe_flag(True):
-            assert self.client.get(lms_url).status_code == 200
+        assert self.client.get(lms_url).status_code == 200
 
 
 class ContentOptimizationTestCase(ModuleStoreTestCase):

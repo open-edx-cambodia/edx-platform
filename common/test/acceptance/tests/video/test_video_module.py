@@ -7,6 +7,8 @@ import os
 from unittest import skipIf
 from unittest.mock import patch
 
+from edx_toggles.toggles.testutils import override_waffle_flag
+
 from common.test.acceptance.fixtures.course import CourseFixture, XBlockFixtureDesc
 from common.test.acceptance.pages.common.auto_auth import AutoAuthPage
 from common.test.acceptance.pages.lms.courseware import CoursewarePage
@@ -17,7 +19,9 @@ from common.test.acceptance.tests.helpers import (
     YouTubeStubConfig,
     is_youtube_available,
 )
+from lms.djangoapps.courseware.toggles import COURSEWARE_USE_LEGACY_FRONTEND
 from openedx.core.lib.tests import attr
+
 
 VIDEO_SOURCE_PORT = 8777
 VIDEO_HOSTNAME = os.environ.get('BOK_CHOY_HOSTNAME', 'localhost')
@@ -210,6 +214,7 @@ class VideoBaseTest(UniqueCourseTest):
 
 
 @attr('a11y')
+@override_waffle_flag(COURSEWARE_USE_LEGACY_FRONTEND, active=True)
 class LMSVideoBlockA11yTest(VideoBaseTest):
     """
     LMS Video Accessibility Test Class
