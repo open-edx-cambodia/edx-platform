@@ -4,6 +4,8 @@ Block Completion Transformer
 
 
 from completion.models import BlockCompletion
+from edx_proctoring.statuses import ProctoredExamStudentAttemptStatus
+from edx_proctoring.api import get_all_exams_for_course, get_current_exam_attempt
 from xblock.completable import XBlockCompletionMode as CompletionMode
 
 from openedx.core.djangoapps.content.block_structure.transformer import BlockStructureTransformer
@@ -56,7 +58,23 @@ class BlockCompletionTransformer(BlockStructureTransformer):
 
         return completion_mode == CompletionMode.EXCLUDED
 
-    def mark_complete(self, complete_course_blocks, latest_complete_block_key, block_key, block_structure):
+    @staticmethod
+    def _complete_exam_keys(block_key, block_structure):
+        """
+        Special logic to cover special exam (timed and proctored exams) completion.
+        Because a learner loses access to these after a set time, for all intents and purposes,
+        they are "complete" even if not every problem in them has been attempted.
+        """
+        block_structure.override_xblock_field(block_key, self.COMPLETE, True)
+        children = block_structure.get_children(block_key).copy()
+        while children:
+            child = children.pop(0)
+            block_structure.override_xblock_field(child, self.COMPLETE, True)
+            children.extend(block_structure.get_children(child))
+
+    def mark_complete(
+        self, complete_course_blocks, latest_complete_block_key, block_key, block_structure, completed_exam_keys
+    ):
         """
         Helper function to mark a block as 'complete' as dictated by
         complete_course_blocks (for problems) or all of a block's children being complete.
@@ -82,6 +100,9 @@ class BlockCompletionTransformer(BlockStructureTransformer):
 
             if any(block_structure.get_xblock_field(child_key, self.RESUME_BLOCK) for child_key in children):
                 block_structure.override_xblock_field(block_key, self.RESUME_BLOCK, True)
+
+        if str(block_key) in completed_exam_keys:
+            self._complete_exam_keys(block_key, block_structure)
 
     def transform(self, usage_info, block_structure):
         """
@@ -137,5 +158,13 @@ class BlockCompletionTransformer(BlockStructureTransformer):
         latest_complete_key = complete_blocks.latest()[0] if complete_blocks else None
         if latest_complete_key:
             complete_keys = {key for key, completion in completions_dict.items() if completion == 1.0}
+
+            active_exams = get_all_exams_for_course(usage_info.course_key, active_only=True)
+            completed_exam_keys = set()
+            for exam in active_exams:
+                exam_attempt = get_current_exam_attempt(exam['id'], usage_info.user)
+                if exam_attempt and ProctoredExamStudentAttemptStatus.is_completed_status(exam_attempt['status']):
+                    completed_exam_keys.add(exam['content_id'])
+
             for block_key in block_structure.post_order_traversal():
-                self.mark_complete(complete_keys, latest_complete_key, block_key, block_structure)
+                self.mark_complete(complete_keys, latest_complete_key, block_key, block_structure, completed_exam_keys)
