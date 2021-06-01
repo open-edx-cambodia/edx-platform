@@ -44,7 +44,7 @@ jobs:
 
     - name: Install Python Dependencies
       run: |
-        pip install paver
+        pip install paver watchdog
 
     - name: Run JS Tests
       env:
