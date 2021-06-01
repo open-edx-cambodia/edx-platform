@@ -44,7 +44,7 @@ jobs:
 
     - name: Install Required Python Dependencies
       run: |
-        pip install -r requirements/edx/paver.txt
+        pip install -r requirements/edx/base.txt
 
     - name: Run JS Tests
       env:
