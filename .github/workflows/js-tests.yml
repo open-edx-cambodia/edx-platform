@@ -37,14 +37,14 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install libxmlsec1-dev xvfb
 
-    - name: setup python
+    - name: Setup Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
 
-    - name: Install Python Dependencies
+    - name: Install Required Python Dependencies
       run: |
-        pip install paver watchdog
+        pip install -r requirements/edx/paver.txt
 
     - name: Run JS Tests
       env:
