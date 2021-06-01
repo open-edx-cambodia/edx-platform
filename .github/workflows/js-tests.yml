@@ -1,4 +1,4 @@
-name: Platform JS Tests
+name: edX Platform JS Tests
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   run_tests:
-    name: Javascript Test
+    name: Javascript Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,27 +33,26 @@ jobs:
         sudo ln -s /opt/firefox/firefox /usr/bin/firefox
         firefox --version
 
-
-    - name: Install Required Packages
+    - name: Install Required System Packages
       run: |
-        sudo apt-get update && sudo apt-get install libxmlsec1-dev
-    - name: Install pip
-      run: pip install -r requirements/edx/pip-tools.txt
+        sudo apt-get update && sudo apt-get install libxmlsec1-dev xvfb
 
-    - name: Install Node
+    - name: Install Node 12
       uses: actions/setup-node@v2
       with:
         node-version: '12.21.0'
+
+    - name: Install pip-tools
+      run: pip install -r requirements/edx/pip-tools.txt
 
     - name: Install Python Dependencies
       run: |
         pip install setuptools wheel
         pip install -r requirements/edx/base.txt
 
-    - uses: browser-actions/setup-geckodriver@latest
-    - name: Run Tests
+    - name: Run JS Tests
       env:
         FIREFOX_BIN: /usr/bin/firefox
         TEST_SUITE: js-unit
         SCRIPT_TO_RUN: ./scripts/generic-ci-tests.sh
-      run: ./scripts/all-tests.sh
+      run: xvfb-run --auto-servernum ./scripts/all-tests.sh
