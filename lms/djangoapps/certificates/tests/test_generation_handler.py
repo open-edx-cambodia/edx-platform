@@ -5,11 +5,9 @@ import logging
 from unittest import mock
 
 import ddt
-from edx_toggles.toggles.testutils import override_waffle_flag
 
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory, UserFactory
 from lms.djangoapps.certificates.generation_handler import (
-    CERTIFICATES_USE_UPDATED,
     _can_generate_allowlist_certificate,
     _can_generate_certificate_for_status,
     _can_generate_v2_certificate,
@@ -262,7 +260,6 @@ class AllowlistTests(ModuleStoreTestCase):
         assert _set_allowlist_cert_status(u, key) is None
 
 
-@override_waffle_flag(CERTIFICATES_USE_UPDATED, active=True)
 @mock.patch(ID_VERIFIED_METHOD, mock.Mock(return_value=True))
 @mock.patch(CCX_COURSE_METHOD, mock.Mock(return_value=False))
 @mock.patch(PASSING_GRADE_METHOD, mock.Mock(return_value=True))
@@ -304,7 +301,6 @@ class CertificateTests(ModuleStoreTestCase):
         """
         assert generate_regular_certificate_task(self.user, self.course_run_key)
 
-    @override_waffle_flag(CERTIFICATES_USE_UPDATED, active=False)
     def test_handle_invalid(self):
         """
         Test handling of an invalid user/course run combo
@@ -319,13 +315,6 @@ class CertificateTests(ModuleStoreTestCase):
         Test the updated flag
         """
         assert is_using_v2_course_certificates(self.course_run_key)
-
-    @override_waffle_flag(CERTIFICATES_USE_UPDATED, active=False)
-    def test_is_using_updated_false(self):
-        """
-        Test the updated flag without the override
-        """
-        assert not is_using_v2_course_certificates(self.course_run_key)
 
     @ddt.data(
         (CertificateStatuses.deleted, True),
@@ -459,13 +448,6 @@ class CertificateTests(ModuleStoreTestCase):
         with mock.patch(WEB_CERTS_METHOD, return_value=False):
             assert not _can_generate_v2_certificate(self.user, self.course_run_key)
             assert _set_v2_cert_status(self.user, self.course_run_key) is None
-
-    @override_waffle_flag(CERTIFICATES_USE_UPDATED, active=False)
-    def test_cert_status_v1(self):
-        """
-        Test cert status with V1 of course certs
-        """
-        assert _set_v2_cert_status(self.user, self.course_run_key) is None
 
     def test_cert_status_downloadable(self):
         """

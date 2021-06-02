@@ -21,7 +21,6 @@ import unicodecsv
 from django.conf import settings
 from django.test.utils import override_settings
 from edx_django_utils.cache import RequestCache
-from edx_toggles.toggles.testutils import override_waffle_flag
 from freezegun import freeze_time
 from pytz import UTC
 
@@ -30,7 +29,6 @@ from capa.tests.response_xml_factory import MultipleChoiceResponseXMLFactory
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory, UserFactory
-from lms.djangoapps.certificates.generation_handler import CERTIFICATES_USE_UPDATED
 from lms.djangoapps.certificates.models import CertificateStatuses, GeneratedCertificate
 from lms.djangoapps.certificates.tests.factories import CertificateAllowlistFactory, GeneratedCertificateFactory
 from lms.djangoapps.courseware.models import StudentModule
@@ -2033,7 +2031,7 @@ class TestCertificateGeneration(InstructorTaskModuleTestCase):
             'failed': 0,
             'skipped': 2
         }
-        with self.assertNumQueries(114):
+        with self.assertNumQueries(74):
             self.assertCertificatesGenerated(task_input, expected_results)
 
     @ddt.data(
@@ -2433,60 +2431,6 @@ class TestCertificateGeneration(InstructorTaskModuleTestCase):
         self.assertCertificatesGenerated(task_input, expected_results)
 
     def test_invalidation(self):
-        # Create students
-        students = self._create_students(2)
-        s1 = students[0]
-        s2 = students[1]
-
-        # Generate certificates
-        for s in students:
-            GeneratedCertificateFactory.create(
-                user=s,
-                course_id=self.course.id,
-                status=CertificateStatuses.downloadable,
-                mode='verified'
-            )
-
-        # Allowlist a student
-        CertificateAllowlistFactory.create(user=s1, course_id=self.course.id)
-
-        statuses = [CertificateStatuses.downloadable]
-        _invalidate_generated_certificates(self.course.id, students, statuses)
-
-        certs = GeneratedCertificate.objects.filter(user=s1, course_id=self.course.id)
-        assert certs.count() == 1
-        downloadable_cert = certs.first()
-        assert downloadable_cert.status == CertificateStatuses.downloadable
-
-        certs = GeneratedCertificate.objects.filter(user=s2, course_id=self.course.id)
-        assert certs.count() == 1
-        invalidated_cert = certs.first()
-        assert invalidated_cert.status == CertificateStatuses.unavailable
-
-    @override_waffle_flag(CERTIFICATES_USE_UPDATED, active=False)
-    def test_invalidation_v2_certificates_disabled(self):
-        """
-        Test that ensures the bulk invalidation step (as part of bulk certificate regeneration) continues to occur when
-        the v2 certificates feature is disabled for a course run.
-        """
-        students = self._create_students(2)
-
-        for s in students:
-            GeneratedCertificateFactory.create(
-                user=s,
-                course_id=self.course.id,
-                status=CertificateStatuses.downloadable,
-                mode='verified'
-            )
-
-        _invalidate_generated_certificates(self.course.id, students, [CertificateStatuses.downloadable])
-
-        for s in students:
-            cert = GeneratedCertificate.objects.get(user=s, course_id=self.course.id)
-            assert cert.status == CertificateStatuses.unavailable
-
-    @override_waffle_flag(CERTIFICATES_USE_UPDATED, active=True)
-    def test_invalidation_v2_certificates_enabled(self):
         """
         Test that ensures the bulk invalidation step (as part of bulk certificate regeneration) is skipped when the v2
         certificates feature is enabled for a course run.
