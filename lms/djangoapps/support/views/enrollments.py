@@ -3,7 +3,7 @@ Support tool for changing course enrollments.
 """
 
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.http import HttpResponseBadRequest
 from django.urls import reverse
@@ -84,6 +84,46 @@ class EnrollmentSupportListView(GenericAPIView):
 
     @method_decorator(require_support_permission)
     def post(self, request, username_or_email):
+        """Allows support staff to create a user's enrollment."""
+        try:
+            user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))
+            course_id = request.data['course_id']
+            course_key = CourseKey.from_string(course_id)
+            mode = request.data['mode']
+            reason = request.data['reason']
+            enrollment = CourseEnrollment.objects.create(user=user, course_id=course_key, mode=mode)
+        except KeyError as err:
+            return HttpResponseBadRequest(f'The field {str(err)} is required.')
+        except IntegrityError:
+            return HttpResponseBadRequest(
+                f'The user {str(username_or_email)} is already enrolled in course run {str(course_id)}.'
+            )
+        except InvalidKeyError:
+            return HttpResponseBadRequest('Could not parse course key.')
+        except (User.DoesNotExist):
+            return HttpResponseBadRequest(
+                'Could not find user {username}.'.format(
+                    username=username_or_email
+                )
+            )
+
+        try:
+            # Wrapped in a transaction so that we can be sure the
+            # ManualEnrollmentAudit record is always created correctly.
+            with transaction.atomic():
+                manual_enrollment = ManualEnrollmentAudit.create_manual_enrollment_audit(
+                    request.user,
+                    enrollment.user.email,
+                    ENROLLED_TO_ENROLLED,
+                    reason=reason,
+                    enrollment=enrollment
+                )
+                return JsonResponse(ManualEnrollmentSerializer(instance=manual_enrollment).data)
+        except CourseModeNotFoundError as err:
+            return HttpResponseBadRequest(str(err))
+
+    @method_decorator(require_support_permission)
+    def patch(self, request, username_or_email):
         """Allows support staff to alter a user's enrollment."""
         try:
             user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))

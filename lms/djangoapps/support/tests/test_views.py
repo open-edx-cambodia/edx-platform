@@ -335,12 +335,12 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
             'support:enrollment_list',
             kwargs={'username_or_email': getattr(self.student, search_string_type)}
         )
-        response = self.client.post(url, data={
+        response = self.client.patch(url, data=json.dumps({
             'course_id': str(self.course.id),
             'old_mode': CourseMode.AUDIT,
             'new_mode': CourseMode.VERIFIED,
             'reason': 'Financial Assistance'
-        })
+        }), content_type='application/json')
         assert response.status_code == 200
         assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is not None
         self.assert_enrollment(CourseMode.VERIFIED)
@@ -365,12 +365,12 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
             'support:enrollment_list',
             kwargs={'username_or_email': getattr(self.student, search_string_type)}
         )
-        response = self.client.post(url, data={
+        response = self.client.patch(url, data=json.dumps({
             'course_id': str(self.course.id),
             'old_mode': CourseMode.AUDIT,
             'new_mode': CourseMode.VERIFIED,
             'reason': 'Financial Assistance'
-        })
+        }), content_type='application/json')
         entitlement.refresh_from_db()
         assert response.status_code == 200
         assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is not None
@@ -406,7 +406,7 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
         # assign the course ID here
         if 'course_id' in data and data['course_id'] is None:
             data['course_id'] = str(self.course.id)
-        response = self.client.post(self.url, data)
+        response = self.client.patch(self.url, data, content_type='application/json')
 
         assert response.status_code == 400
         assert re.match(error_message, response.content.decode('utf-8').replace("'", '').replace('"', '')) is not None
@@ -485,12 +485,12 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
                 ['Arizona State University'], 'You are now eligible for credit from Arizona State University'
             )
             mock_method.return_value = credit_provider
-            response = self.client.post(url, data={
+            response = self.client.patch(url, data=json.dumps({
                 'course_id': str(self.course.id),
                 'old_mode': CourseMode.AUDIT,
                 'new_mode': new_mode,
                 'reason': 'Financial Assistance'
-            })
+            }), content_type='application/json')
 
         assert response.status_code == 200
         assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is not None
