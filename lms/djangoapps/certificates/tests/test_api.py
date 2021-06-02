@@ -850,7 +850,7 @@ class AllowlistTests(ModuleStoreTestCase):
         # Add user to the allowlist
         CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user)
         # Add user to the allowlist, but set whitelist to false
-        CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user2, whitelist=False)
+        CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user2, allowlist=False)
         # Add user to the allowlist in the other course
         CertificateAllowlistFactory.create(course_id=self.second_course_run_key, user=self.user4)
 
@@ -991,7 +991,7 @@ class CertificateAllowlistTests(ModuleStoreTestCase):
         """
         Test to verify that we will return False when the allowlist entry if it is disabled.
         """
-        CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user, whitelist=False)
+        CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user, allowlist=False)
 
         result = is_on_allowlist(self.user, self.course_run_key)
         assert not result
