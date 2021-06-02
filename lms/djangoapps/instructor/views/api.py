@@ -3123,10 +3123,10 @@ def generate_certificate_exceptions(request, course_id, generate_for=None):
 
     if generate_for == 'all':
         # Generate Certificates for all allowlisted students
-        students = 'all_whitelisted'
+        students = 'all_allowlisted'
 
     elif generate_for == 'new':
-        students = 'whitelisted_not_generated'
+        students = 'allowlisted_not_generated'
 
     else:
         # Invalid data, generate_for must be present for all certificate exceptions
@@ -3141,7 +3141,7 @@ def generate_certificate_exceptions(request, course_id, generate_for=None):
     task_api.generate_certificates_for_students(request, course_key, student_set=students)
     response_payload = {
         'success': True,
-        'message': _('Certificate generation started for white listed students.'),
+        'message': _('Certificate generation started for students on the allow list.'),
     }
 
     return JsonResponse(response_payload)
