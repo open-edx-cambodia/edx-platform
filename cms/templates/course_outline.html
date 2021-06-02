@@ -115,7 +115,7 @@ from django.urls import reverse
         </div>
       </div>
     %endif
-  
+
   %if proctoring_errors:
     <div class="wrapper wrapper-alert wrapper-alert-error is-shown">
       <div class="alert announcement has-actions">
@@ -127,7 +127,7 @@ from django.urls import reverse
             % if course_authoring_microfrontend_url:
               <% url_encoded_course_id = quote(six.text_type(context_course.id).encode('utf-8'), safe='') %>
               ${Text(_("To update these settings go to the {link_start}Proctored Exam Settings page{link_end}.")).format(
-                link_start=HTML('<a href="{course_authoring_microfrontend_url}/proctored-exam-settings/{url_encoded_course_id}">').format(
+                link_start=HTML('<a href="{course_authoring_microfrontend_url}">').format(
                   course_authoring_microfrontend_url=course_authoring_microfrontend_url,
                   url_encoded_course_id=url_encoded_course_id,
                 ),
