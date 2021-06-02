@@ -474,21 +474,21 @@ class CertificateAllowlistTest(SharedModuleStoreTestCase):
 
     def test_get_allowlist_empty(self):
         ret = CertificateAllowlist.get_certificate_allowlist(course_id=None, student=None)
-        assert len(ret) is 0
+        assert len(ret) == 0
 
     def test_get_allowlist_multiple_users(self):
         CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user)
         CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.second_user)
 
         ret = CertificateAllowlist.get_certificate_allowlist(course_id=self.course_run_key)
-        assert len(ret) is 2
+        assert len(ret) == 2
 
     def test_get_allowlist_no_cert(self):
         allowlist_item = CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.user)
         CertificateAllowlistFactory.create(course_id=self.course_run_key, user=self.second_user)
 
         ret = CertificateAllowlist.get_certificate_allowlist(course_id=self.course_run_key, student=self.user)
-        assert len(ret) is 1
+        assert len(ret) == 1
 
         item = ret[0]
         assert item['id'] == allowlist_item.id
@@ -509,7 +509,7 @@ class CertificateAllowlistTest(SharedModuleStoreTestCase):
         )
 
         ret = CertificateAllowlist.get_certificate_allowlist(course_id=self.course_run_key, student=self.user)
-        assert len(ret) is 1
+        assert len(ret) == 1
 
         item = ret[0]
         assert item['id'] == allowlist_item.id
