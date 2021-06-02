@@ -1090,7 +1090,7 @@ class CourseBlock(
 
     def set_default_certificate_available_date(self):
         if (not self.certificate_available_date) and self.end:
-            self.certificate_available_date = self.end + timedelta(days=2)
+            self.certificate_available_date = self.end
 
     @classmethod
     def read_grading_policy(cls, paths, system):

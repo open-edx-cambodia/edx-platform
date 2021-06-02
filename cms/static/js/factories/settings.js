@@ -13,6 +13,29 @@ define([
                 $('label').removeClass('is-focused');
             });
 
+        // Toggle collapsibles when trigger is clicked
+        $(".collapsible .collapsible-trigger").click(function() {
+            const contentId = this.id.replace("-trigger", "-content")
+            $(`#${contentId}`).toggleClass("collapsed")
+            console.log("I was clicked");
+        })
+
+        // Hide certificate available date unless the display behavior shows it.
+        $('#certificates-display-behavior').change(function(){
+            let showDatepicker = document.getElementById("certificates-display-behavior").value == "end_with_date";
+            let certificateAvailableDateField = document.getElementById("field-certificate-available-date")
+            let datepicker = document.getElementById("certificate-available-date")
+            if (showDatepicker){
+                datepicker.disabled = false;
+                certificateAvailableDateField.classList.remove("hidden");
+            } else {
+                datepicker.disabled = true;
+                datepicker.value = null;
+                certificateAvailableDateField.classList.add("hidden");
+            }
+        })
+
+
         model = new CourseDetailsModel();
         model.urlRoot = detailsUrl;
         model.showCertificateAvailableDate = showCertificateAvailableDate;

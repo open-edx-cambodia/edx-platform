@@ -416,7 +416,7 @@ class CourseBlockTestCase(unittest.TestCase):
         The certificate_available_date field should default to two days
         after the course end date.
         """
-        expected_certificate_available_date = self.course.end + timedelta(days=2)
+        expected_certificate_available_date = self.course.end
         assert expected_certificate_available_date == self.course.certificate_available_date
 
 

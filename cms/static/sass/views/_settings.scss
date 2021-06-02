@@ -157,6 +157,27 @@
       color: $red;
     }
 
+    .collapsible {
+      .collapsible-trigger{
+        color: theme-color("primary");
+        &:hover{
+          cursor: pointer;
+        }
+      }
+
+      .collapsible-content{
+        .collapsible-description-heading {
+          font-weight: bold;
+          margin-top: $baseline;
+        }
+
+        &.collapsed{
+          height: 0;
+          overflow: hidden;
+        }
+      }
+    }
+
     // buttons
     .remove-item {
       @include white-button;
@@ -222,10 +243,14 @@
           }
         }
 
+        &.hidden {
+          display: none;
+        }
+
         label,
         input,
         textarea {
-          display: block;
+          display: inline-block;
         }
 
         label {
@@ -242,7 +267,8 @@
         }
 
         input,
-        textarea {
+        textarea,
+        select {
           @extend %t-copy-base;
 
           @include placeholder($gray-l4);
@@ -285,6 +311,10 @@
           & + label {
             display: inline-block;
           }
+        }
+
+        .datepicker-icon {
+          margin-left: -($baseline * 1.5);
         }
       }
 
@@ -478,7 +508,7 @@
         .field {
           @include float(left);
 
-          width: flex-grid(3, 9);
+          width: flex-grid(4, 9);
           margin-bottom: ($baseline/4);
           margin-right: flex-gutter();
         }
