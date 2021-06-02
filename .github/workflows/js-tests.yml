@@ -23,16 +23,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Install Firefox 61
-      run: |
-        firefox --version
-        sudo apt-get purge firefox
-        wget "https://ftp.mozilla.org/pub/firefox/releases/61.0/linux-x86_64/en-US/firefox-61.0.tar.bz2"
-        tar -xjf firefox-61.0.tar.bz2
-        sudo mv firefox /opt/firefox
-        sudo ln -s /opt/firefox/firefox /usr/bin/firefox
-        firefox --version
-
     - name: Install Required System Packages
       run: |
         sudo apt-get update && sudo apt-get install libxmlsec1-dev xvfb
