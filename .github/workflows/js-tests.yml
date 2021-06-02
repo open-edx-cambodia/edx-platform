@@ -11,7 +11,7 @@ on:
 jobs:
   run_tests:
     name: Javascript Tests
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ '12.21.0' ]
