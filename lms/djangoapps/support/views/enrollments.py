@@ -101,17 +101,15 @@ class EnrollmentSupportListView(GenericAPIView):
             user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))
             enrollment = CourseEnrollment.get_enrollment(user=user, course_key=course_key)
             if enrollment is not None:
-                raise IntegrityError
+                return HttpResponseBadRequest(
+                    f'The user {str(username_or_email)} is already enrolled in {str(course_id)}.'
+                )
             reason = request.data['reason']
             enrollment = CourseEnrollment.enroll(
                 user=user, course_key=course_key, mode=mode
             )
         except KeyError as err:
             return HttpResponseBadRequest(f'The field {str(err)} is required.')
-        except IntegrityError:
-            return HttpResponseBadRequest(
-                f'The user {str(username_or_email)} is already enrolled in {str(course_id)}.'
-            )
         except InvalidKeyError:
             return HttpResponseBadRequest('Could not parse course key.')
         except User.DoesNotExist:
