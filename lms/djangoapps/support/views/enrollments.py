@@ -86,17 +86,30 @@ class EnrollmentSupportListView(GenericAPIView):
     def post(self, request, username_or_email):
         """Allows support staff to create a user's enrollment."""
         try:
-            user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))
             course_id = request.data['course_id']
             course_key = CourseKey.from_string(course_id)
             mode = request.data['mode']
+            enrollment_modes = [
+                enrollment_mode['slug']
+                for enrollment_mode in self.get_course_modes(course_key)
+            ]
+            if mode not in enrollment_modes:
+                return HttpResponseBadRequest(
+                    f'{str(mode)} is not a valid mode for {str(course_id)}. Possible valid modes are {str(enrollment_modes)}'
+                )
+            user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))
+            enrollment = CourseEnrollment.objects.get(user=user, course_id=course_key)
+            if enrollment is not None:
+                raise IntegrityError
             reason = request.data['reason']
-            enrollment = CourseEnrollment.objects.create(user=user, course_id=course_key, mode=mode)
+            enrollment = CourseEnrollment.enroll(
+                user=user, course_key=course_key, mode=mode
+            )
         except KeyError as err:
             return HttpResponseBadRequest(f'The field {str(err)} is required.')
         except IntegrityError:
             return HttpResponseBadRequest(
-                f'The user {str(username_or_email)} is already enrolled in course run {str(course_id)}.'
+                f'The user {str(username_or_email)} is already enrolled in {str(course_id)}.'
             )
         except InvalidKeyError:
             return HttpResponseBadRequest('Could not parse course key.')
