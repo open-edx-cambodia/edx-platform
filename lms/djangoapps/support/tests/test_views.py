@@ -329,6 +329,39 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
 
     @disable_signal(signals, 'post_save')
     @ddt.data('username', 'email')
+    def test_create_new_enrollment(self, search_string_type):
+        testUser = UserFactory.create(username='newStudent', email='test2@example.com', password='test')
+        assert ManualEnrollmentAudit.get_manual_enrollment_by_email(testUser.email) is None
+        url = reverse(
+            'support:enrollment_list',
+            kwargs={'username_or_email': getattr(testUser, search_string_type)}
+        )
+        response = self.client.post(url, data={
+            'course_id': str(self.course.id),
+            'mode': CourseMode.AUDIT,
+            'reason': 'Financial Assistance'
+        })
+        assert response.status_code == 200
+        assert ManualEnrollmentAudit.get_manual_enrollment_by_email(testUser.email) is not None
+
+    @disable_signal(signals, 'post_save')
+    @ddt.data('username', 'email')
+    def test_create_existing_enrollment(self, search_string_type):
+        assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is None
+        url = reverse(
+            'support:enrollment_list',
+            kwargs={'username_or_email': getattr(self.student, search_string_type)}
+        )
+        response = self.client.post(url, data={
+            'course_id': str(self.course.id),
+            'mode': CourseMode.AUDIT,
+            'reason': 'Financial Assistance'
+        })
+        assert response.status_code == 400
+        assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is None
+
+    @disable_signal(signals, 'post_save')
+    @ddt.data('username', 'email')
     def test_change_enrollment(self, search_string_type):
         assert ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email) is None
         url = reverse(

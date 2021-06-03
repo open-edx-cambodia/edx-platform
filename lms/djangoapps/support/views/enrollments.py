@@ -95,10 +95,11 @@ class EnrollmentSupportListView(GenericAPIView):
             ]
             if mode not in enrollment_modes:
                 return HttpResponseBadRequest(
-                    f'{str(mode)} is not a valid mode for {str(course_id)}. Possible valid modes are {str(enrollment_modes)}'
+                    f'{str(mode)} is not a valid mode for {str(course_id)}. '
+                    f'Possible valid modes are {str(enrollment_modes)}'
                 )
             user = User.objects.get(Q(username=username_or_email) | Q(email=username_or_email))
-            enrollment = CourseEnrollment.objects.get(user=user, course_id=course_key)
+            enrollment = CourseEnrollment.get_enrollment(user=user, course_key=course_key)
             if enrollment is not None:
                 raise IntegrityError
             reason = request.data['reason']
@@ -113,27 +114,24 @@ class EnrollmentSupportListView(GenericAPIView):
             )
         except InvalidKeyError:
             return HttpResponseBadRequest('Could not parse course key.')
-        except (User.DoesNotExist):
+        except User.DoesNotExist:
             return HttpResponseBadRequest(
                 'Could not find user {username}.'.format(
                     username=username_or_email
                 )
             )
 
-        try:
-            # Wrapped in a transaction so that we can be sure the
-            # ManualEnrollmentAudit record is always created correctly.
-            with transaction.atomic():
-                manual_enrollment = ManualEnrollmentAudit.create_manual_enrollment_audit(
-                    request.user,
-                    enrollment.user.email,
-                    ENROLLED_TO_ENROLLED,
-                    reason=reason,
-                    enrollment=enrollment
-                )
-                return JsonResponse(ManualEnrollmentSerializer(instance=manual_enrollment).data)
-        except CourseModeNotFoundError as err:
-            return HttpResponseBadRequest(str(err))
+        # Wrapped in a transaction so that we can be sure the
+        # ManualEnrollmentAudit record is always created correctly.
+        with transaction.atomic():
+            manual_enrollment = ManualEnrollmentAudit.create_manual_enrollment_audit(
+                request.user,
+                enrollment.user.email,
+                ENROLLED_TO_ENROLLED,
+                reason=reason,
+                enrollment=enrollment
+            )
+            return JsonResponse(ManualEnrollmentSerializer(instance=manual_enrollment).data)
 
     @method_decorator(require_support_permission)
     def patch(self, request, username_or_email):
