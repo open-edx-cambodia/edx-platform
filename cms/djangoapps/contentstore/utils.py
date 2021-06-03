@@ -184,13 +184,13 @@ def get_proctored_exam_settings_url(course_module) -> str:
     """
     Gets course authoring microfrontend URL for links to proctored exam settings page
     """
-    proctored_exam_settings_url = ''
+    mfe_proctored_exam_settings_url = ''
     if settings.FEATURES.get('ENABLE_EXAM_SETTINGS_HTML_VIEW'):
         course_authoring_microfrontend_url = get_course_authoring_url(course_module)
         if course_authoring_microfrontend_url:
-            proctored_exam_settings_url = f'{course_authoring_microfrontend_url}/course/{course_module.id}' \
+            mfe_proctored_exam_settings_url = f'{course_authoring_microfrontend_url}/course/{course_module.id}' \
                                           f'/proctored-exam-settings'
-    return proctored_exam_settings_url
+    return mfe_proctored_exam_settings_url
 
 
 def course_import_olx_validation_is_enabled():

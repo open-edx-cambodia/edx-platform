@@ -701,7 +701,7 @@ def course_index(request, course_key):
             settings.FEATURES.get('FRONTEND_APP_PUBLISHER_URL', False)
         )
 
-        course_authoring_microfrontend_url = get_proctored_exam_settings_url(course_module)
+        mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
 
         # gather any errors in the currently stored proctoring settings.
         advanced_dict = CourseMetadata.fetch(course_module)
@@ -727,7 +727,7 @@ def course_index(request, course_key):
                 },
             ) if current_action else None,
             'frontend_app_publisher_url': frontend_app_publisher_url,
-            'course_authoring_microfrontend_url': course_authoring_microfrontend_url,
+            'mfe_proctored_exam_settings_url': mfe_proctored_exam_settings_url,
             'advance_settings_url': reverse_course_url('advanced_settings_handler', course_module.id),
             'proctoring_errors': proctoring_errors,
         })
@@ -1143,7 +1143,7 @@ def settings_handler(request, course_key_string):  # lint-amnesty, pylint: disab
             upgrade_deadline = (verified_mode and verified_mode.expiration_datetime and
                                 verified_mode.expiration_datetime.isoformat())
 
-            course_authoring_microfrontend_url = get_proctored_exam_settings_url(course_module)
+            mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
 
             settings_context = {
                 'context_course': course_module,
@@ -1168,7 +1168,7 @@ def settings_handler(request, course_key_string):  # lint-amnesty, pylint: disab
                 'is_entrance_exams_enabled': core_toggles.ENTRANCE_EXAMS.is_enabled(),
                 'enable_extended_course_details': enable_extended_course_details,
                 'upgrade_deadline': upgrade_deadline,
-                'course_authoring_microfrontend_url': course_authoring_microfrontend_url,
+                'mfe_proctored_exam_settings_url': mfe_proctored_exam_settings_url,
             }
             if is_prerequisite_courses_enabled():
                 courses, in_process_course_actions = get_courses_accessible_to_user(request)
@@ -1283,7 +1283,7 @@ def grading_handler(request, course_key_string, grader_index=None):
         if 'text/html' in request.META.get('HTTP_ACCEPT', '') and request.method == 'GET':
             course_details = CourseGradingModel.fetch(course_key)
 
-            course_authoring_microfrontend_url = get_proctored_exam_settings_url(course_module)
+            mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
 
             return render_to_response('settings_graders.html', {
                 'context_course': course_module,
@@ -1291,7 +1291,7 @@ def grading_handler(request, course_key_string, grader_index=None):
                 'course_details': course_details,
                 'grading_url': reverse_course_url('grading_handler', course_key),
                 'is_credit_course': is_credit_course(course_key),
-                'course_authoring_microfrontend_url': course_authoring_microfrontend_url,
+                'mfe_proctored_exam_settings_url': mfe_proctored_exam_settings_url,
             })
         elif 'application/json' in request.META.get('HTTP_ACCEPT', ''):
             if request.method == 'GET':
@@ -1389,7 +1389,7 @@ def advanced_settings_handler(request, course_key_string):
                 settings.FEATURES.get('ENABLE_PUBLISHER', False)
             )
 
-            course_authoring_microfrontend_url = get_proctored_exam_settings_url(course_module)
+            mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
 
             # gather any errors in the currently stored proctoring settings.
             proctoring_errors = CourseMetadata.validate_proctoring_settings(course_module, advanced_dict, request.user)
@@ -1399,7 +1399,7 @@ def advanced_settings_handler(request, course_key_string):
                 'advanced_dict': advanced_dict,
                 'advanced_settings_url': reverse_course_url('advanced_settings_handler', course_key),
                 'publisher_enabled': publisher_enabled,
-                'course_authoring_microfrontend_url': course_authoring_microfrontend_url,
+                'mfe_proctored_exam_settings_url': mfe_proctored_exam_settings_url,
                 'proctoring_errors': proctoring_errors,
             })
         elif 'application/json' in request.META.get('HTTP_ACCEPT', ''):
@@ -1744,7 +1744,7 @@ def group_configurations_list_handler(request, course_key_string):
             if not has_content_groups:
                 displayable_partitions.append(GroupConfiguration.get_or_create_content_group(store, course))
 
-            course_authoring_microfrontend_url = get_proctored_exam_settings_url(course)
+            mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course)
 
             return render_to_response('group_configurations.html', {
                 'context_course': course,
@@ -1754,7 +1754,7 @@ def group_configurations_list_handler(request, course_key_string):
                 'should_show_experiment_groups': should_show_experiment_groups,
                 'all_group_configurations': displayable_partitions,
                 'should_show_enrollment_track': should_show_enrollment_track,
-                'course_authoring_microfrontend_url': course_authoring_microfrontend_url,
+                'mfe_proctored_exam_settings_url': mfe_proctored_exam_settings_url,
             })
         elif "application/json" in request.META.get('HTTP_ACCEPT'):
             if request.method == 'POST':

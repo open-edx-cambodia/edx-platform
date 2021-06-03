@@ -29,7 +29,7 @@ def checklists_handler(request, course_key_string=None):
 
     course_module = modulestore().get_course(course_key)
 
-    proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
+    mfe_proctored_exam_settings_url = get_proctored_exam_settings_url(course_module)
 
     return render_to_response('checklists.html', {
         'language_code': request.LANGUAGE_CODE,
